@@ -3,7 +3,7 @@ import './Events.css';
 import Modal from '../modal/modal';
 
 export default function EventCreatevalue({ valueChange, selectedDate }) {
-    const [items, setItems] = useState([]);
+    const [items, setItems] = useState({});
     const [userValue, setUserValue] = useState('');
 
     useEffect(() => {
@@ -23,23 +23,35 @@ export default function EventCreatevalue({ valueChange, selectedDate }) {
             return;
         }
 
-        const newItem = { name: userValue, date: selectedDate.toString() };
-        const updatedItems = [...items, newItem];
+        const dateKey = selectedDate.toDateString();
+        const newItem = { name: userValue, date: dateKey };
+        
+       
+        const updatedItems = { ...items, [dateKey]: [...(items[dateKey] || []), newItem] };
+
         setItems(updatedItems);
         localStorage.setItem('modalItems', JSON.stringify(updatedItems));
-        valueChange(userValue);  
+        valueChange(userValue);
         setUserValue('');
     }
 
-    function deleteEvent(index) {
-        const updatedItems = items.filter((_, i) => i !== index);
+    function deleteEvent(dateKey, index) {
+        const updatedEvents = items[dateKey].filter((_, i) => i !== index);
+        const updatedItems = { ...items };
+
+        if (updatedEvents.length === 0) {
+            delete updatedItems[dateKey]; 
+        } else {
+            updatedItems[dateKey] = updatedEvents; 
+        }
+
         setItems(updatedItems);
         localStorage.setItem('modalItems', JSON.stringify(updatedItems));
     }
 
-    function updateEvent(index, newName) {
-        const updatedItems = [...items];
-        updatedItems[index].name = newName;
+    function updateEvent(dateKey, index, newName) {
+        const updatedItems = { ...items };
+        updatedItems[dateKey][index].name = newName; 
         setItems(updatedItems);
         localStorage.setItem('modalItems', JSON.stringify(updatedItems));
     }
@@ -47,12 +59,12 @@ export default function EventCreatevalue({ valueChange, selectedDate }) {
     return (
         <>
             <div className='wrapper'>
-                <input 
-                    className='userValue' 
-                    placeholder='Event name' 
-                    type="text" 
-                    onChange={inputChange} 
-                    value={userValue} 
+                <input
+                    className='userValue'
+                    placeholder='Event name'
+                    type="text"
+                    onChange={inputChange}
+                    value={userValue}
                 />
                 <button className='btn' onClick={addItem}>Click Here to Add Event</button>
             </div>
